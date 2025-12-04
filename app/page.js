@@ -23,8 +23,6 @@ export default function Home() {
         { name: '淘宝', url: 'https://www.taobao.com' },
         { name: '京东', url: 'https://www.jd.com' },
         { name: '知乎', url: 'https://www.zhihu.com' },
-        { name: '抖音', url: 'https://www.douyin.com' },
-        { name: '微博', url: 'https://weibo.com' },
         { name: 'Deepseek', url: 'https://chat.deepseek.com' },
         { name: 'B站', url: 'https://www.bilibili.com' },
       ]);
@@ -79,7 +77,7 @@ export default function Home() {
       <div className="absolute top-0 left-0 w-full h-full bg-black/10 z-10 pointer-events-none" />
 
       {/* 主体内容 */}
-      <div className="relative z-20 flex flex-col items-center justify-center h-full w-full px-4">
+      <div className="relative z-20 flex flex-col items-center pt-20 h-full w-full px-4">
         
         {/* 时钟 */}
         <div className="flex items-end gap-3 mb-8 drop-shadow-md select-none">
