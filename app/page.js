@@ -33,6 +33,11 @@ export default function Home() {
     const envEngines = process.env.NEXT_PUBLIC_SEARCH_ENGINES;
     let loadedEngines = [
       { name: '百度', url: 'https://www.baidu.com/s?wd=' },
+      { name: 'Google', url: 'https://www.google.com/search?q=' },
+      { name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=' },
+      { name: '必应', url: 'https://www.bing.com/search?q=' },
+      { name: '360', url: 'https://www.so.com/s?q=' },
+      { name: '搜狗', url: 'https://www.sogou.com/web?query=' },
     ];
     if (envEngines) {
       try {
@@ -134,8 +139,8 @@ export default function Home() {
                       px-4 py-2 text-sm cursor-pointer rounded-lg transition-all duration-200
                       hover:bg-black/5 hover:scale-105
                       ${currentEngine.name === engine.name 
-                        ? 'text-black font-extrabold'  // 选中状态：更黑、更粗
-                        : 'text-gray-600 font-medium'  // 默认状态：深灰
+                        ? 'text-black font-extrabold'
+                        : 'text-gray-600 font-medium'
                       }
                     `}
                   >
