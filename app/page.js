@@ -26,12 +26,13 @@ export default function Home() {
     if (envLinks) {
       try { setLinks(JSON.parse(envLinks)); } catch (e) { console.error("导航链接解析失败", e); }
     } else {
-      setLinks([]);
+      setLinks([{ name: '愛和流浪動物之家', url: 'https://aihe.ngo.us' }]);
     }
 
     // 2. 读取搜索引擎
     const envEngines = process.env.NEXT_PUBLIC_SEARCH_ENGINES;
     let loadedEngines = [
+      { name: '百度', url: 'https://www.baidu.com/s?wd=' },
     ];
     if (envEngines) {
       try {
@@ -131,12 +132,6 @@ export default function Home() {
                     onClick={() => handleEngineSelect(engine)}
                     className={`
                       px-4 py-2 text-sm cursor-pointer rounded-lg transition-all duration-200
-                      /* 
-                         逻辑修改：
-                         1. 只有 hover 时显示背景 (hover:bg-black/5)
-                         2. 选中的项 (currentEngine) 只显示加粗和深色字，不显示背景
-                         3. 这样就不会出现两条背景色了
-                      */
                       hover:bg-black/5 hover:scale-105
                       ${currentEngine.name === engine.name 
                         ? 'text-black font-extrabold'  // 选中状态：更黑、更粗
@@ -185,7 +180,7 @@ export default function Home() {
               className="
                 text-sm sm:text-base font-medium text-white/90 tracking-wider 
                 px-4 py-2 rounded-full transition-all duration-200
-                hover:bg-white/20 hover:text-white hover:backdrop-blur-sm
+                hover:bg-white/15 hover:text-white hover:backdrop-blur-sm
               "
             >
               {link.name}
