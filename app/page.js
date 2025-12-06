@@ -17,9 +17,7 @@ export default function Home() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   // 视频控制状态
-  // 1. startLoadVideo: 控制是否开始下载视频（解决带宽抢占问题）
   const [startLoadVideo, setStartLoadVideo] = useState(false);
-  // 2. isVideoReady: 控制视频是否缓冲完毕可以播放（解决黑屏闪烁问题）
   const [isVideoReady, setIsVideoReady] = useState(false);
 
   const searchContainerRef = useRef(null);
@@ -208,7 +206,7 @@ export default function Home() {
       </div>
 
       {/* 底部导航 */}
-      <div className="absolute bottom-0 w-full z-30 pb-[78px] sm:pb-[110px]">
+      <div className="absolute bottom-0 w-full z-30 pb-[75px] sm:pb-[107px]">
         <div className="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-blue-300/20 to-transparent pointer-events-none" />
         <div className="relative flex flex-wrap justify-center gap-4 sm:gap-8 px-4">
           {links.map((link, index) => (
@@ -218,7 +216,7 @@ export default function Home() {
               className="
                 text-sm sm:text-base font-medium text-white/90 tracking-wider 
                 px-4 py-2 rounded-full transition-all duration-200
-                hover:bg-white/20 hover:text-white hover:backdrop-blur-sm
+                hover:bg-white/15 hover:text-white hover:backdrop-blur-sm
               "
             >
               {link.name}
