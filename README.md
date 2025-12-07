@@ -43,13 +43,7 @@
 
 **示例值：**
 ```json
-[
-  {"name":"淘宝","url":"https://www.taobao.com"},
-  {"name":"京东","url":"https://www.jd.com"},
-  {"name":"知乎","url":"https://www.zhihu.com"},
-  {"name":"B站","url":"https://www.bilibili.com"},
-  {"name":"GitHub","url":"https://github.com"}
-]
+[{"name":"淘宝","url":"https://www.taobao.com"},{"name":"京东","url":"https://www.jd.com"},{"name":"知乎","url":"https://www.zhihu.com"},{"name":"B站","url":"https://www.bilibili.com"},{"name":"GitHub","url":"https://github.com"}]
 ```
 
 ### 2. 搜索引擎列表 (`NEXT_PUBLIC_SEARCH_ENGINES`)
@@ -57,11 +51,7 @@
 
 **示例值：**
 ```json
-[
-  {"name": "百度", "url": "https://www.baidu.com/s?wd="},
-  {"name": "Google", "url": "https://www.google.com/search?q="},
-  {"name": "必应", "url": "https://www.bing.com/search?q="}
-]
+[{"name": "百度", "url": "https://www.baidu.com/s?wd="},{"name": "Google", "url": "https://www.google.com/search?q="},{"name": "DuckDuckGo", "url": "https://duckduckgo.com/?q="},{"name": "必应", "url": "https://www.bing.com/search?q="},{"name": "搜狗", "url": "https://www.sogou.com/web?query="},{"name": "小红书", "url": "https://www.xiaohongshu.com/search_result/?keyword="}]
 ```
 
 ---
