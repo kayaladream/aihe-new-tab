@@ -208,7 +208,7 @@ export default function Home() {
       {/* 底部导航 */}
       <div className="absolute bottom-0 w-full z-30 pb-[75px] sm:pb-[107px]">
         <div className="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-blue-300/20 to-transparent pointer-events-none" />
-        <div className="relative flex flex-wrap justify-center gap-4 sm:gap-8 px-4">
+        <div className="relative flex flex-wrap justify-center gap-2 sm:gap-4 px-4">
           {links.map((link, index) => (
             <a
               key={index}
