@@ -120,7 +120,36 @@ export default function Home() {
     };
 
     const envLinks = process.env.NEXT_PUBLIC_NAV_LINKS;
-    let parsedLinks = [{ name: '演示-淘宝', url: 'https://www.taobao.com' }];
+    let parsedLinks = [
+      { name: 'Amazon', url: 'https://www.amazon.com' },
+      { name: 'Apple', url: 'https://www.apple.com' },
+      { name: 'Cloudflare', url: 'https://www.cloudflare.com' },
+      { name: 'Facebook', url: 'https://www.facebook.com' },
+      { name: 'GitHub', url: 'https://www.github.com' },
+      { name: 'Google', url: 'https://www.google.com' },
+      { name: 'Linux DO', url: 'https://linux.do' },
+      { name: 'Microsoft', url: 'https://www.microsoft.com' },
+      { name: 'Netflix', url: 'https://www.netflix.com' },
+      { name: 'Twitter', url: 'https://www.twitter.com' },
+      { name: 'Wikipedia', url: 'https://www.wikipedia.org' },
+      { name: 'YouTube', url: 'https://www.youtube.com' },
+      { name: '爱奇艺', url: 'https://www.iqiyi.com' },
+      { name: '哔哩哔哩', url: 'https://www.bilibili.com' },
+      { name: '京东', url: 'https://www.jd.com' },
+      { name: '国家税务局', url: 'https://www.chinatax.gov.cn' },
+      { name: '工商银行', url: 'https://www.icbc.com.cn' },
+      { name: '建设银行', url: 'https://www.ccb.com' },
+      { name: '交通银行', url: 'https://www.bankcomm.com' },
+      { name: '农业银行', url: 'https://www.abchina.com' },
+      { name: '搜狐', url: 'https://www.sohu.com' },
+      { name: '淘宝', url: 'https://www.taobao.com' },
+      { name: '腾讯', url: 'https://www.tencent.com' },
+      { name: '网易', url: 'https://www.163.com' },
+      { name: '微博', url: 'https://www.weibo.com' },
+      { name: '微信公众平台', url: 'https://mp.weixin.qq.com' },
+      { name: '新浪', url: 'https://www.sina.com.cn' },
+      { name: '知乎', url: 'https://www.zhihu.com' },
+];
     if (envLinks) {
       try { parsedLinks = JSON.parse(envLinks); } catch (e) { console.error(e); }
     }
