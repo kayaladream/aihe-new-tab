@@ -51,29 +51,30 @@ export default function Home() {
     // 2. 延迟加载视频
     const videoTimer = setTimeout(() => setStartLoadVideo(true), 800); 
 
-    // 3. 核心：激进版智能布局算法 (Squeeze Layout)
+    // 3. 核心：智能布局算法 (带安全缓冲版)
     const calculateLayout = (allLinks) => {
       if (!allLinks || allLinks.length === 0) return;
 
       const screenWidth = window.innerWidth;
       const isDesktop = screenWidth > 1024;
-      // 容器左右留白: 电脑 760px, 手机 32px
       const containerPadding = isDesktop ? 760 : 32;
-      // 增加 5px 的容错宽度，防止极其微小的误差导致换行
-      const availableWidth = screenWidth - containerPadding + 5;
+      
+      // ↓↓↓ 核心修改 ↓↓↓
+      // 引入 20px 的安全缓冲 (Safety Buffer)
+      // 这就像给车库倒车留余量，防止 JS 算得刚刚好，但 CSS 渲染多出 1px 导致换行。
+      const safetyBuffer = 20; 
+      const availableWidth = screenWidth - containerPadding - safetyBuffer;
 
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
-      // 使用更精准的系统字体栈进行测量
       const fontStack = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+      // 字体参数与 CSS 保持一致 (font-extralight = 200)
       context.font = isDesktop ? `200 14px ${fontStack}` : `200 12px ${fontStack}`;
 
-      // 调整测量参数：
-      // 实际 padding 是 px-3 (12px*2=24px)。
-      // 这里我们在计算时用 22px，稍微"欺骗"一下算法，让它敢于多放一个
-      const itemPadding = 22; 
+      // 样式常量 (px-3 = 24px)
+      const itemPadding = 24; 
       const itemGap = isDesktop ? 16 : 8; 
-      const buttonWidth = 40; // ... 按钮宽度
+      const buttonWidth = 45; // 稍微调大一点按钮预留宽度
 
       let lines = [[]]; 
       let currentLineIndex = 0;
@@ -81,11 +82,12 @@ export default function Home() {
 
       for (let i = 0; i < allLinks.length; i++) {
         const link = allLinks[i];
-        // 移除额外的 length 补偿，进行精确测量
+        // 测量宽度
         const textWidth = context.measureText(link.name).width;
-        // 稍微向上取整，但不多加 buffer
+        // 向上取整
         const itemTotalWidth = Math.ceil(textWidth + itemPadding);
 
+        // 计算增加该链接后的宽度
         const widthToAdd = (lines[currentLineIndex].length === 0) ? itemTotalWidth : (itemGap + itemTotalWidth);
 
         if (currentLineWidth + widthToAdd <= availableWidth) {
@@ -99,23 +101,22 @@ export default function Home() {
         }
       }
 
-      // 逻辑修正：只要超出了2行，就需要修剪第2行
+      // 溢出处理逻辑
       if (lines.length > 2) {
-        // 1. 收集所有第3行及之后的链接（必须隐藏）
         let overflowLinks = [];
+        // 收集第3行及以后的
         for (let i = 2; i < lines.length; i++) {
           overflowLinks = overflowLinks.concat(lines[i]);
         }
 
-        // 2. 修剪第2行
+        // 修剪第2行
         let row2 = lines[1] || [];
         let row2Width = 0;
         row2.forEach((item, idx) => {
           row2Width += item._width + (idx > 0 ? itemGap : 0);
         });
 
-        // 这里的逻辑：如果 (当前行宽 + 间距 + 按钮宽 > 可用宽度)，就必须拿掉一个
-        // 注意：我们加了条件 row2.length > 0，防止把第2行删光了按钮还放不下（虽然不太可能）
+        // 只要 (当前宽 + 间距 + 按钮宽 > 可用宽度)，就一直移除末尾元素
         while (row2.length > 0 && (row2Width + itemGap + buttonWidth > availableWidth)) {
           const removedItem = row2.pop();
           const widthToRemove = removedItem._width + (row2.length > 0 ? itemGap : 0);
@@ -126,7 +127,6 @@ export default function Home() {
         setVisibleLinks([...lines[0], ...row2]);
         setHiddenLinks(overflowLinks);
       } else {
-        // 如果正好2行或更少，直接全部显示
         setVisibleLinks(allLinks);
         setHiddenLinks([]);
       }
@@ -139,7 +139,6 @@ export default function Home() {
     }
     setLinks(parsedLinks);
     
-    // 延迟执行确保字体加载
     setTimeout(() => calculateLayout(parsedLinks), 100);
     const onResize = () => calculateLayout(parsedLinks);
     window.addEventListener('resize', onResize);
