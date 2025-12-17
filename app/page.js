@@ -51,73 +51,68 @@ export default function Home() {
     // 2. 延迟加载视频
     const videoTimer = setTimeout(() => setStartLoadVideo(true), 800); 
 
-    // 3. 核心：智能布局算法 (Canvas 测量法)
+    // 3. 核心：智能布局算法 (修复按钮溢出问题)
     const calculateLayout = (allLinks) => {
-      // 如果没有链接，直接返回
       if (!allLinks || allLinks.length === 0) return;
 
       const screenWidth = window.innerWidth;
       const isDesktop = screenWidth > 1024;
-
-      // 1. 获取容器可用宽度
-      // 电脑端：总宽 - 760px (左右各380)
-      // 手机端：总宽 - 32px (左右各16)
       const containerPadding = isDesktop ? 760 : 32;
       const availableWidth = screenWidth - containerPadding;
 
-      // 2. 准备测量工具
+      // 准备测量工具
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
-      // 设置字体以匹配 CSS (电脑 14px, 手机 12px)
+      // 匹配字体: extralight (200), desktop 14px, mobile 12px
       context.font = isDesktop ? '200 14px sans-serif' : '200 12px sans-serif';
 
-      // 样式常量
-      // padding: px-3 => 12px * 2 = 24px
-      // gap: sm:gap-4 (16px) / gap-2 (8px)
-      const itemPadding = 24; 
-      const itemGap = isDesktop ? 16 : 8;
-      const moreButtonWidth = 50; // "..." 按钮的预留宽度
+      const itemPadding = 24; // px-3 => 12+12
+      const itemGap = isDesktop ? 16 : 8; // sm:gap-4 / gap-2
+      const moreButtonWidth = 60; // "..." 按钮预留宽度 (含 gap)
 
       let currentRow = 1;
       let currentLineWidth = 0;
       let visibleCount = 0;
 
-      // 3. 开始模拟填充
+      // 第一次遍历：尝试尽可能多放
       for (let i = 0; i < allLinks.length; i++) {
         const link = allLinks[i];
         
-        // 测量当前链接的宽度 (文字宽 + 内边距 + 少量缓冲)
-        const textMetrics = context.measureText(link.name);
-        const linkWidth = textMetrics.width + itemPadding + 2; // +2px buffer
+        // 测量宽度 + 补偿 (tracking-wider 导致每个字大约宽 1-2px)
+        const textWidth = context.measureText(link.name).width + (link.name.length * 2); 
+        const linkTotalWidth = textWidth + itemPadding;
 
-        // 尝试放入当前行
-        // 如果不是第一个元素，要加上 gap
-        const widthToAdd = (currentLineWidth === 0) ? linkWidth : (itemGap + linkWidth);
+        // 计算增加该链接后的宽度
+        const gap = (currentLineWidth === 0) ? 0 : itemGap;
+        const widthToAdd = gap + linkTotalWidth;
 
-        if (currentLineWidth + widthToAdd <= availableWidth) {
-          // 能放下，直接加
+        // 关键判断：
+        // 如果我们正在第2行，我们必须检查是否会侵占 "..." 按钮的空间
+        // 假设当前不是最后一个链接，那么我们可能需要放按钮，所以要预留 moreButtonWidth
+        const isLastItem = (i === allLinks.length - 1);
+        const reserveForButton = isLastItem ? 0 : moreButtonWidth;
+
+        if (currentLineWidth + widthToAdd + (currentRow === 2 ? reserveForButton : 0) <= availableWidth) {
+          // 能放下
           currentLineWidth += widthToAdd;
           visibleCount++;
         } else {
           // 放不下，换行
           currentRow++;
-          currentLineWidth = linkWidth; // 新起一行，当前宽度就是这个元素的宽度
+          currentLineWidth = linkTotalWidth; // 新行初始宽度
           
-          // 如果换行后，行数 > 2，说明第3行开始了 -> 立即停止！
+          // 如果换行后变成了第3行 -> 立即停止，且不要算入当前这个链接
           if (currentRow > 2) {
             break; 
           }
+          
+          // 如果刚换到第2行，也要检查第2行第一个元素 + 按钮会不会溢出 (极罕见情况)
+          if (currentRow === 2 && currentLineWidth + reserveForButton > availableWidth) {
+            break;
+          }
+
           visibleCount++;
         }
-      }
-
-      // 4. 后处理：如果有被隐藏的链接，我们需要确保 "..." 按钮能放得进第2行
-      // 如果所有链接都显示了，就不需要处理
-      if (visibleCount < allLinks.length) {
-        // 既然有隐藏的，说明刚才填满了2行，或者刚溢出。
-        // 为了安全起见，我们通常回退 1 个，把位置让给 "..."
-        // 这样能绝对保证第2行末尾不会因为加了 "..." 而挤出第3行
-        visibleCount = Math.max(0, visibleCount - 1);
       }
 
       setVisibleLinks(allLinks.slice(0, visibleCount));
@@ -131,7 +126,7 @@ export default function Home() {
     }
     setLinks(parsedLinks);
     
-    // 稍微延迟一下计算，等待字体加载，提高准确度
+    // 延时执行以确保字体加载
     setTimeout(() => calculateLayout(parsedLinks), 100);
 
     const onResize = () => calculateLayout(parsedLinks);
