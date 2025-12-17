@@ -211,7 +211,7 @@ export default function Home() {
           {/* 
              修改点：visibleLinks.map
              1. text-xs sm:text-sm: 手机12px，电脑14px (比之前小了一号)。
-             2. font-light: 标准字重 (比之前的 medium 500 细了一档)。
+             2. font-extralight: 标准字重 (比之前的 medium 500 细了一档)。
           */}
           {visibleLinks.map((link, index) => (
             <a key={index} href={link.url} className="text-xs sm:text-sm font-normal text-white/90 tracking-wider px-3 py-2 rounded-full transition-all duration-200 hover:bg-white/20 hover:text-white hover:backdrop-blur-sm h-fit">
@@ -227,7 +227,7 @@ export default function Home() {
               {/* 
                  下拉菜单链接也同步修改：
                  text-xs sm:text-sm (变小)
-                 font-light (变细)
+                 font-extralight (变细)
               */}
               {isMoreMenuOpen && (
                 <div 
