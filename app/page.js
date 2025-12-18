@@ -31,13 +31,20 @@ export default function Home() {
   useEffect(() => {
     setYear(new Date().getFullYear());
 
-    // 1. 背景选择
+    // 1. 背景选择逻辑 (升级版)
     const envBg = process.env.NEXT_PUBLIC_BACKGROUND_LIST;
+    // 新增：允许用户指定最大数量 (例如填 5，就只随机 cat, cat1...cat4)
+    const envBgCount = process.env.NEXT_PUBLIC_BG_COUNT; 
+    
     let bgList = ['cat']; 
+
     if (envBg) {
       if (envBg === 'all') {
         bgList = ['cat'];
-        for (let i = 1; i < 30; i++) {
+        // 如果环境变量没填数量，默认尝试到 29；如果填了，就按填的数量来
+        const maxCount = envBgCount ? parseInt(envBgCount) : 30;
+        // i 从 1 开始，所以总数是 maxCount (cat + cat1...cat(max-1))
+        for (let i = 1; i < maxCount; i++) {
           bgList.push(`cat${i}`);
         }
       } else {
@@ -51,30 +58,23 @@ export default function Home() {
     // 2. 延迟加载视频
     const videoTimer = setTimeout(() => setStartLoadVideo(true), 800); 
 
-    // 3. 核心：智能布局算法 (偏执版 - 宁缺毋滥)
+    // 3. 核心：智能布局算法
     const calculateLayout = (allLinks) => {
       if (!allLinks || allLinks.length === 0) return;
 
       const screenWidth = window.innerWidth;
       const isDesktop = screenWidth > 1024;
       const containerPadding = isDesktop ? 760 : 32;
-      
-      // ↓↓↓ 修改点 1: 极度加大的安全缓冲
-      // 之前是 20，现在改为 80。宁愿第2行空一点，也绝对不让它挤出第3行。
-      const safetyBuffer = 80; 
-      const availableWidth = screenWidth - containerPadding - safetyBuffer;
+      const availableWidth = screenWidth - containerPadding + 5;
 
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       const fontStack = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
       context.font = isDesktop ? `200 14px ${fontStack}` : `200 12px ${fontStack}`;
 
-      const itemPadding = 24; // px-3
+      const itemPadding = 22; 
       const itemGap = isDesktop ? 16 : 8; 
-      
-      // ↓↓↓ 修改点 2: 虚报按钮宽度
-      // 实际按钮只有约 40px，我们预留 80px，给浏览器渲染误差留足空间
-      const buttonWidth = 80; 
+      const buttonWidth = 40;
 
       let lines = [[]]; 
       let currentLineIndex = 0;
@@ -82,14 +82,8 @@ export default function Home() {
 
       for (let i = 0; i < allLinks.length; i++) {
         const link = allLinks[i];
-        
-        // ↓↓↓ 修改点 3: 字间距补偿 (tracking-wider)
-        // tracking-wider 大约是 0.05em，我们给每个字符多算 1.5px 的宽度，防止算少了
-        const charSpacingBuffer = link.name.length * 1.5;
-        const textWidth = context.measureText(link.name).width + charSpacingBuffer;
-        
-        // 向上取整并加 2px 边框误差
-        const itemTotalWidth = Math.ceil(textWidth + itemPadding + 2);
+        const textWidth = context.measureText(link.name).width;
+        const itemTotalWidth = Math.ceil(textWidth + itemPadding);
 
         const widthToAdd = (lines[currentLineIndex].length === 0) ? itemTotalWidth : (itemGap + itemTotalWidth);
 
@@ -104,22 +98,18 @@ export default function Home() {
         }
       }
 
-      // 溢出处理逻辑
       if (lines.length > 2) {
         let overflowLinks = [];
-        // 收集第3行及以后的
         for (let i = 2; i < lines.length; i++) {
           overflowLinks = overflowLinks.concat(lines[i]);
         }
 
-        // 修剪第2行
         let row2 = lines[1] || [];
         let row2Width = 0;
         row2.forEach((item, idx) => {
           row2Width += item._width + (idx > 0 ? itemGap : 0);
         });
 
-        // 强力修剪：只要加上按钮宽度超标，就一直删，直到能放下为止
         while (row2.length > 0 && (row2Width + itemGap + buttonWidth > availableWidth)) {
           const removedItem = row2.pop();
           const widthToRemove = removedItem._width + (row2.length > 0 ? itemGap : 0);
@@ -195,8 +185,11 @@ export default function Home() {
     };
   }, []);
 
+  // --- 视频错误处理 (防黑屏关键) ---
   const handleVideoError = () => {
-    console.warn(`Video ${bgName} failed, reverting to cat.`);
+    // 如果当前随机到的视频加载失败 (比如 cat10 不存在)
+    // 立即降级回最安全的 'cat'
+    console.warn(`Video ${bgName} failed to load, reverting to default.`);
     setBgName('cat');
   };
 
@@ -225,12 +218,14 @@ export default function Home() {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.4); }
       `}</style>
 
+      {/* 静态图 - 始终加载，如果视频挂了至少还有图 */}
       <img src={`/background/${bgName}.jpg`} onError={(e) => e.currentTarget.src='/background/cat.jpg'} alt="Background" className="absolute top-0 left-0 w-full h-full object-cover z-0" />
       
       {startLoadVideo && (
         <video
           autoPlay loop muted playsInline key={bgName} 
           onCanPlay={() => setIsVideoReady(true)}
+          // ↓↓↓ 核心修改：添加 onError 处理
           onError={handleVideoError}
           className={`absolute top-0 left-0 w-full h-full object-cover z-0 transition-opacity duration-1000 ease-in-out ${isVideoReady ? 'opacity-100' : 'opacity-0'}`}
         >
@@ -289,7 +284,7 @@ export default function Home() {
             <div className="relative h-fit" ref={moreMenuRef}>
               <button onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} className="text-sm sm:text-base font-bold text-white/90 tracking-wider w-10 h-9 flex items-center justify-center rounded-full transition-all duration-200 hover:bg-white/20 hover:text-white hover:backdrop-blur-sm">•••</button>
 
-              {/* 下拉菜单 (自适应胶囊 + 边缘渐隐) */}
+              {/* 下拉菜单 */}
               {isMoreMenuOpen && (
                 <div 
                   className="absolute bottom-28 left-1/2 -translate-x-1/2 w-56 flex flex-col gap-1 z-50 animate-in fade-in zoom-in-95 duration-200 max-h-80 overflow-y-auto custom-scrollbar"
@@ -298,6 +293,12 @@ export default function Home() {
                     WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)'
                   }}
                 >
+                   {/* 
+                      修改点：
+                      1. flex-col items-center: 让内部元素居中对齐。
+                      2. 下面的 <a> 标签加了 w-fit 和 whitespace-nowrap。
+                         这样胶囊的宽度就会紧贴文字，不再是通栏的了。
+                   */}
                    <div className="flex flex-col items-center gap-1 py-4">
                      {hiddenLinks.map((link, idx) => (
                        <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="block px-4 py-2 text-xs sm:text-sm text-center text-white/90 font-extralight rounded-full transition-all duration-200 hover:bg-white/20 hover:text-white w-fit whitespace-nowrap">
