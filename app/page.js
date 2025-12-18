@@ -27,24 +27,27 @@ export default function Home() {
   const moreMenuRef = useRef(null); 
   const searchContainerRef = useRef(null);
 
+  // --- 新增：媒体加载错误处理 ---
+  // 如果随机到了一个不存在的文件(比如还没上传的 cat20)，
+  // 浏览器报错时，立即切换回默认的 'cat'，防止黑屏。
+  const handleMediaError = () => {
+    if (bgName !== 'cat') {
+      console.log(`背景 ${bgName} 加载失败，回退到默认背景`);
+      setBgName('cat');
+    }
+  };
+
   // --- 初始化逻辑 ---
   useEffect(() => {
     setYear(new Date().getFullYear());
 
-    // 1. 背景选择逻辑 (升级版)
+    // 1. 背景选择
     const envBg = process.env.NEXT_PUBLIC_BACKGROUND_LIST;
-    // 新增：允许用户指定最大数量 (例如填 5，就只随机 cat, cat1...cat4)
-    const envBgCount = process.env.NEXT_PUBLIC_BG_COUNT; 
-    
     let bgList = ['cat']; 
-
     if (envBg) {
       if (envBg === 'all') {
         bgList = ['cat'];
-        // 如果环境变量没填数量，默认尝试到 29；如果填了，就按填的数量来
-        const maxCount = envBgCount ? parseInt(envBgCount) : 30;
-        // i 从 1 开始，所以总数是 maxCount (cat + cat1...cat(max-1))
-        for (let i = 1; i < maxCount; i++) {
+        for (let i = 1; i < 30; i++) {
           bgList.push(`cat${i}`);
         }
       } else {
@@ -52,29 +55,30 @@ export default function Home() {
       }
     }
     if (bgList.length > 0) {
+      // 随机选一个
       setBgName(bgList[Math.floor(Math.random() * bgList.length)]);
     }
 
     // 2. 延迟加载视频
     const videoTimer = setTimeout(() => setStartLoadVideo(true), 800); 
 
-    // 3. 核心：智能布局算法
+    // 3. 核心：智能布局算法 (带安全缓冲版)
     const calculateLayout = (allLinks) => {
       if (!allLinks || allLinks.length === 0) return;
 
       const screenWidth = window.innerWidth;
       const isDesktop = screenWidth > 1024;
       const containerPadding = isDesktop ? 760 : 32;
-      const availableWidth = screenWidth - containerPadding + 5;
+      const availableWidth = screenWidth - containerPadding - 20; // 20px 安全缓冲
 
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       const fontStack = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
       context.font = isDesktop ? `200 14px ${fontStack}` : `200 12px ${fontStack}`;
 
-      const itemPadding = 22; 
+      const itemPadding = 24; 
       const itemGap = isDesktop ? 16 : 8; 
-      const buttonWidth = 40;
+      const buttonWidth = 45; 
 
       let lines = [[]]; 
       let currentLineIndex = 0;
@@ -185,14 +189,6 @@ export default function Home() {
     };
   }, []);
 
-  // --- 视频错误处理 (防黑屏关键) ---
-  const handleVideoError = () => {
-    // 如果当前随机到的视频加载失败 (比如 cat10 不存在)
-    // 立即降级回最安全的 'cat'
-    console.warn(`Video ${bgName} failed to load, reverting to default.`);
-    setBgName('cat');
-  };
-
   const handleSearch = (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
@@ -207,6 +203,7 @@ export default function Home() {
   return (
     <main className="relative w-full h-screen overflow-hidden text-white font-sans">
       
+      {/* 滚动条样式 */}
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -218,15 +215,23 @@ export default function Home() {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.4); }
       `}</style>
 
-      {/* 静态图 - 始终加载，如果视频挂了至少还有图 */}
-      <img src={`/background/${bgName}.jpg`} onError={(e) => e.currentTarget.src='/background/cat.jpg'} alt="Background" className="absolute top-0 left-0 w-full h-full object-cover z-0" />
+      {/* 
+         静态图 & 视频 
+         新增：onError={handleMediaError}
+         当试图加载不存在的 cat29.jpg 或 cat29.mp4 时，会自动触发并切换回 cat
+      */}
+      <img 
+        src={`/background/${bgName}.jpg`} 
+        alt="Background" 
+        className="absolute top-0 left-0 w-full h-full object-cover z-0" 
+        onError={handleMediaError}
+      />
       
       {startLoadVideo && (
         <video
           autoPlay loop muted playsInline key={bgName} 
           onCanPlay={() => setIsVideoReady(true)}
-          // ↓↓↓ 核心修改：添加 onError 处理
-          onError={handleVideoError}
+          onError={handleMediaError} // 视频加载失败也回退
           className={`absolute top-0 left-0 w-full h-full object-cover z-0 transition-opacity duration-1000 ease-in-out ${isVideoReady ? 'opacity-100' : 'opacity-0'}`}
         >
           <source src={`/background/${bgName}.mp4`} type="video/mp4" />
@@ -284,7 +289,6 @@ export default function Home() {
             <div className="relative h-fit" ref={moreMenuRef}>
               <button onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} className="text-sm sm:text-base font-bold text-white/90 tracking-wider w-10 h-9 flex items-center justify-center rounded-full transition-all duration-200 hover:bg-white/20 hover:text-white hover:backdrop-blur-sm">•••</button>
 
-              {/* 下拉菜单 */}
               {isMoreMenuOpen && (
                 <div 
                   className="absolute bottom-28 left-1/2 -translate-x-1/2 w-56 flex flex-col gap-1 z-50 animate-in fade-in zoom-in-95 duration-200 max-h-80 overflow-y-auto custom-scrollbar"
@@ -293,15 +297,9 @@ export default function Home() {
                     WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)'
                   }}
                 >
-                   {/* 
-                      修改点：
-                      1. flex-col items-center: 让内部元素居中对齐。
-                      2. 下面的 <a> 标签加了 w-fit 和 whitespace-nowrap。
-                         这样胶囊的宽度就会紧贴文字，不再是通栏的了。
-                   */}
-                   <div className="flex flex-col items-center gap-1 py-4">
+                   <div className="flex flex-col gap-1 py-4">
                      {hiddenLinks.map((link, idx) => (
-                       <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="block px-4 py-2 text-xs sm:text-sm text-center text-white/90 font-extralight rounded-full transition-all duration-200 hover:bg-white/20 hover:text-white w-fit whitespace-nowrap">
+                       <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="block px-4 py-2 text-xs sm:text-sm text-center text-white/90 font-extralight rounded-full transition-all duration-200 hover:bg-white/20 hover:text-white">
                          {link.name}
                        </a>
                      ))}
