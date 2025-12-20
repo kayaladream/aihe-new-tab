@@ -212,7 +212,7 @@ export default function Home() {
   return (
     // 修改点：bg-slate-900
     // 给主容器加一个深色背景。在图片加载出来之前，用户看到的是这个深色，而不是白屏。
-    <main className="relative w-full h-screen overflow-hidden text-white font-sans bg-slate-900">
+    <main className="relative w-full h-screen overflow-hidden text-white font-sans">
       
       {/* 滚动条样式 */}
       <style jsx global>{`
